@@ -1,9 +1,11 @@
 import './style.css'
 import * as THREE from 'three'
-import { addBoilerPlateMeshes, addStandardMesh } from './addDefaultMeshes';
+import { addBoilerPlateMeshes, addStandardMesh, addTextureMesh,addMushroomMesh } from './addDefaultMeshes';
 import { addLight } from './addDefaultLights';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true })
+const clock = new THREE.Clock()
+
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
@@ -25,12 +27,16 @@ function init() {
 
   meshes.default = addBoilerPlateMeshes()
   meshes.standard = addStandardMesh()
+  meshes.physical = addTextureMesh()
+  meshes.mushroom = addMushroomMesh()
 
   lights.default = addLight()
 
   scene.add(meshes.default)
   scene.add(meshes.standard)
   scene.add(lights.default)
+  scene.add(meshes.physical)
+  scene.add(meshes.mushroom)
 
   camera.position.set(0, 0, 5)
   resize();
@@ -46,10 +52,18 @@ function resize() {
 }
 
 function animate() {
+  const tick = clock.getElapsedTime()
   requestAnimationFrame(animate);
+
+  meshes.physical.material.displacementScale = Math.sin(tick)
+
+
   meshes.default.rotation.x+=0.01
   meshes.standard.rotation.y+=0.01
   meshes.standard.rotation.z-=0.01
+  meshes.physical.rotation.y+=0.02
+  meshes.mushroom.rotation.x+=0.01
+  // meshes.physical.rotation.x+=0.01
 
   renderer.render(scene, camera);
 }
