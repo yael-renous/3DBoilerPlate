@@ -58,7 +58,8 @@ function instances() {
     position: new THREE.Vector3(0, -0.8, 3),
     animationState: true,
     mixers: mixers,
-    replace:true
+    replace:true,
+    replaceURL:'black_matcap.png'
   })
   flower.init()
 }
