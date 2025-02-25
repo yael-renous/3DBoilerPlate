@@ -4,8 +4,10 @@ import { addBoilerPlateMeshes, addStandardMesh, addTextureMesh, addMushroomMesh 
 import { addLight } from './addDefaultLights';
 import Model from './Model'
 import gsap from 'gsap';
+import { LumaSplatsThree } from '@lumaai/luma-web';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-const renderer = new THREE.WebGLRenderer({ antialias: true })
+const renderer = new THREE.WebGLRenderer({ antialias: false }) //TURN antialias TO FALSE ONLY FOR GUASIAN SPLATS
 const clock = new THREE.Clock()
 
 const camera = new THREE.PerspectiveCamera(
@@ -20,6 +22,8 @@ const scene = new THREE.Scene();
 const mixers = []
 const pointer = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
+const controls= new OrbitControls(camera, renderer.domElement)
+
 init();
 
 
@@ -33,14 +37,34 @@ function init() {
   meshes.mushroom = addMushroomMesh()
   meshes.physical.position.set(-2, -2, 0)
 
-
-  lights.default = addLight()
+  meshes.splat = new LumaSplatsThree({
+    source:'https://lumalabs.ai/capture/efdc0126-1e48-4711-a1e9-0080e13108a9',
+    // particleRevealEnabled:true,
+    loadingAnimationEnabled:false
+  }  )
+  meshes.splat.onLoad = ()=>{
+    meshes.splat.captureCubemap(renderer).then((capturedTexture)=>{
+      gsap.to('.loader',{
+        opacity:0,
+        duration:1.5,
+        ease:'power1.out',
+        onComplete:()=>{
+          gsap.to('.loader',{zIndex:-3})
+        }
+      })
+      scene.environment =capturedTexture
+      scene.background = capturedTexture
+      scene.backgroundBlurriness=0
+    })
+  }
+  // lights.default = addLight()
 
   scene.add(meshes.default)
   scene.add(meshes.standard)
   scene.add(meshes.physical)
   scene.add(meshes.mushroom)
-  scene.add(lights.default)
+  scene.add(meshes.splat)
+  // scene.add(lights.default)
 
   camera.position.set(0, 0, 5)
   raycast()
@@ -84,6 +108,16 @@ function raycast() {
 }
 
 function instances() {
+  const car = new Model({
+    name: 'car',
+    scene: scene,
+    meshes: meshes,
+    url: 'sports_lite.glb',
+    scale: new THREE.Vector3(0.01, 0.01, 0.01),
+    position: new THREE.Vector3(-2.5, -1, 1),
+    rotation: new THREE.Vector3(0,-Math.PI/4,0),
+  })
+  car.init()
   const flower = new Model({
     name: 'flower',
     scene: scene,
@@ -96,7 +130,7 @@ function instances() {
     replace: true,
     replaceURL: 'black_matcap.png'
   })
-  flower.init()
+  // flower.init()
 }
 
 function resize() {
