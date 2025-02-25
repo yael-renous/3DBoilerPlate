@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { addBoilerPlateMeshes, addStandardMesh, addTextureMesh, addMushroomMesh } from './addDefaultMeshes';
 import { addLight } from './addDefaultLights';
 import Model from './Model'
-
+import gsap from 'gsap';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true })
 const clock = new THREE.Clock()
@@ -18,8 +18,8 @@ const meshes = {}
 const lights = {}
 const scene = new THREE.Scene();
 const mixers = []
-
-
+const pointer = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
 init();
 
 
@@ -31,7 +31,7 @@ function init() {
   meshes.standard = addStandardMesh()
   meshes.physical = addTextureMesh()
   meshes.mushroom = addMushroomMesh()
-  meshes.physical.position.set(-2,-2,0)
+  meshes.physical.position.set(-2, -2, 0)
 
 
   lights.default = addLight()
@@ -43,9 +43,44 @@ function init() {
   scene.add(lights.default)
 
   camera.position.set(0, 0, 5)
+  raycast()
   resize();
   instances()
   animate();
+}
+
+function raycast() {
+  window.addEventListener('click', (event) => {
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera)
+    const intersects = raycaster.intersectObjects(scene.children, true)
+    for (let i = 0; i < intersects.length; i++) {
+      //look for things we want
+      let object = intersects[i].object
+      while(object){
+        if(object.userData.groupName ==="box1"){
+          gsap.to(meshes.default.scale,{
+            x:5,
+            y:5,
+            z:5,
+            ease:'power1.out'
+          })
+        }
+        if(object.userData.groupName ==="flower"){
+          gsap.to(meshes.flower.scale,{
+            x:0,
+            y:0,
+            z:0,
+            duration:1.5,
+            ease:'power1.out'
+          })
+        }
+          object=object.parent
+      }
+
+    }
+  })
 }
 
 function instances() {
@@ -58,8 +93,8 @@ function instances() {
     position: new THREE.Vector3(0, -0.8, 3),
     animationState: true,
     mixers: mixers,
-    replace:true,
-    replaceURL:'black_matcap.png'
+    replace: true,
+    replaceURL: 'black_matcap.png'
   })
   flower.init()
 }
